@@ -3,13 +3,18 @@
 	"version": "9.0.0",
 	"description": "Open URLs, files, folders, and apps from one cross-platform command — with bookmarks, search, clipboard, reveal, dry-run, and stdin support.",
 	"license": "MIT",
-	"repository": "aditya-pandey/summon",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Aditya060806/summon.git"
+	},
+	"homepage": "https://github.com/Aditya060806/summon#readme",
+	"bugs": "https://github.com/Aditya060806/summon/issues",
 	"author": {
 		"name": "Aditya Pandey"
 	},
 	"type": "module",
 	"bin": {
-		"summon": "./cli.js"
+		"summon": "cli.js"
 	},
 	"engines": {
 		"node": ">=20"
