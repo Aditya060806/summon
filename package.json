@@ -1,0 +1,62 @@
+{
+	"name": "summon",
+	"version": "9.0.0",
+	"description": "Open stuff like URLs, files, executables. Cross-platform.",
+	"license": "MIT",
+	"repository": "aditya-pandey/summon",
+	"author": {
+		"name": "Aditya Pandey"
+	},
+	"type": "module",
+	"bin": {
+		"summon": "./cli.js"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"test": "xo && ava"
+	},
+	"files": [
+		"cli.js"
+	],
+	"keywords": [
+		"summon",
+		"cli-app",
+		"cli",
+		"app",
+		"open",
+		"opener",
+		"opens",
+		"launch",
+		"start",
+		"xdg-open",
+		"xdg",
+		"default",
+		"cmd",
+		"browser",
+		"editor",
+		"executable",
+		"exe",
+		"url",
+		"urls",
+		"arguments",
+		"spawn",
+		"exec",
+		"child",
+		"process",
+		"website",
+		"file"
+	],
+	"dependencies": {
+		"file-type": "^21.3.4",
+		"meow": "^14.1.0",
+		"open": "^11.0.0",
+		"tempy": "^3.2.0"
+	},
+	"devDependencies": {
+		"ava": "^7.0.0",
+		"execa": "^9.6.1",
+		"xo": "^2.0.2"
+	}
+}
