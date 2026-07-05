@@ -7,6 +7,29 @@ const onScroll = () => nav.classList.toggle('is-scrolled', window.scrollY > 24);
 window.addEventListener('scroll', onScroll, {passive: true});
 onScroll();
 
+/* ---------- Theme toggle ---------- */
+(() => {
+	const root = document.documentElement;
+	const btn = document.getElementById('theme-toggle');
+	const meta = document.querySelector('meta[name="theme-color"]');
+	const apply = (theme) => {
+		root.dataset.theme = theme;
+		if (meta) meta.setAttribute('content', theme === 'light' ? '#f7f8fb' : '#05060a');
+		if (window.__refreshStars) window.__refreshStars();
+	};
+	btn.addEventListener('click', () => {
+		const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+		try { localStorage.setItem('summon-theme', next); } catch (e) {}
+		apply(next);
+	});
+	// Follow the OS if the user hasn't chosen explicitly.
+	window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+		let stored = null;
+		try { stored = localStorage.getItem('summon-theme'); } catch (err) {}
+		if (stored !== 'light' && stored !== 'dark') apply(e.matches ? 'light' : 'dark');
+	});
+})();
+
 /* ---------- Starfield ---------- */
 (() => {
 	const canvas = document.getElementById('stars');
@@ -14,6 +37,11 @@ onScroll();
 	let stars = [];
 	let w, h, raf;
 	const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	let rgb = readRGB();
+	function readRGB() {
+		return (getComputedStyle(document.documentElement).getPropertyValue('--star-rgb').trim()) || '180,200,235';
+	}
+	window.__refreshStars = () => { rgb = readRGB(); };
 
 	function resize() {
 		w = canvas.width = window.innerWidth;
@@ -36,7 +64,7 @@ onScroll();
 			if (s.a > 0.85 || s.a < 0.15) s.dir *= -1;
 			ctx.beginPath();
 			ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-			ctx.fillStyle = `rgba(180,200,235,${s.a})`;
+			ctx.fillStyle = `rgba(${rgb},${s.a})`;
 			ctx.fill();
 		}
 		raf = requestAnimationFrame(draw);
@@ -45,7 +73,7 @@ onScroll();
 	resize();
 	window.addEventListener('resize', resize);
 	if (!reduce) draw();
-	else { for (const s of stars) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(180,200,235,${s.a})`; ctx.fill(); } }
+	else { for (const s of stars) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(${rgb},${s.a})`; ctx.fill(); } }
 })();
 
 /* ---------- Feature cards ---------- */
