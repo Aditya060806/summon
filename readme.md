@@ -68,6 +68,7 @@ $ cat diagram.png | summon                  # pipe raw bytes straight in
 - [Comparison](#comparison)
   - [Feature matrix](#feature-matrix)
   - [Same task, side by side](#same-task-side-by-side)
+  - [vs other npm openers](#vs-other-npm-openers)
 - [Efficiency](#efficiency)
 - [Exit codes](#exit-codes)
 - [Platform support](#platform-support)
@@ -587,6 +588,33 @@ The value shows up most when you compare the actual commands for the same job.
 | Open clipboard URL (Linux) | `summon -c` | `xdg-open "$(xclip -o -selection clipboard)"` |
 | Preview without launching | `summon x.com --dry-run` | no native equivalent |
 | Pipe + auto-detect type | `cat f \| summon` | no native equivalent |
+
+### vs other npm openers
+
+The npm ecosystem has a few ways to open things. `summon` builds on the excellent [`open`](https://github.com/sindresorhus/open) library (the programmatic API) and starts from [`open-cli`](https://github.com/sindresorhus/open-cli), then adds a workflow layer on top.
+
+| Capability | **summon** | [`open-cli`](https://www.npmjs.com/package/open-cli) | [`opener`](https://www.npmjs.com/package/opener) | [`open`](https://www.npmjs.com/package/open) |
+| --- | :---: | :---: | :---: | :---: |
+| Ships a CLI command | ✅ | ✅ | ✅ | ❌ (library) |
+| Cross-platform | ✅ | ✅ | ✅ | ✅ |
+| Open URL / file / folder / app | ✅ | ✅ | ✅ | ✅ (API) |
+| Choose app + pass args (`-- app …`) | ✅ | ✅ | ❌ | ✅ (API) |
+| Wait / background | ✅ | ✅ | ❌ | ✅ (API) |
+| Stdin + file-type detection | ✅ | ✅ | ❌ | ❌ |
+| Multiple targets in one call | ✅ | ❌ | ❌ | ❌ |
+| Auto `https://` for bare domains | ✅ | ❌ | ❌ | ❌ |
+| Bookmarks / aliases | ✅ | ❌ | ❌ | ❌ |
+| Web search + configurable engines | ✅ | ❌ | ❌ | ❌ |
+| Open from clipboard | ✅ | ❌ | ❌ | ❌ |
+| Reveal in file manager | ✅ | ❌ | ❌ | ❌ |
+| Recent + fuzzy picker | ✅ | ❌ | ❌ | ❌ |
+| Dry-run preview | ✅ | ❌ | ❌ | ❌ |
+| Typed exit codes + friendly errors | ✅ | ⚠️ | ⚠️ | n/a |
+| Shell completions | ✅ | ❌ | ❌ | n/a |
+
+✅ yes · ⚠️ basic/partial · ❌ no · n/a not applicable
+
+**In short:** reach for [`open`](https://www.npmjs.com/package/open) when you need a programmatic API inside Node code; reach for `open-cli` or `opener` for a bare "open this one thing" command; reach for **summon** when you want that same reliability *plus* multiple targets, bookmarks, search, clipboard, reveal, a fuzzy picker, and dry-run in day-to-day terminal use.
 
 ## Efficiency
 
