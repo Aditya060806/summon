@@ -21,9 +21,10 @@ Bookmarks, search, clipboard, reveal-in-file-manager, dry-run, multiple targets,
 </div>
 
 <!--
-  DEMO: drop a terminal recording here for maximum impact.
-  Record with https://github.com/charmbracelet/vhs or https://asciinema.org
-  then reference it, e.g.:
+  DEMO: a ready-to-run VHS script lives at media/demo.tape.
+    1. Install VHS: https://github.com/charmbracelet/vhs
+    2. From the repo root, run:  vhs media/demo.tape
+    3. It writes media/demo.gif — then uncomment the line below.
   <div align="center"><img src="media/demo.gif" alt="summon demo" width="700"></div>
 -->
 
