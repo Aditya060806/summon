@@ -1,11 +1,11 @@
 {
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "Open URLs, files, folders, and apps from one cross-platform command",
 	"homepage": "https://github.com/Aditya060806/summon",
 	"license": "MIT",
 	"depends": "nodejs",
 	"installer": {
-		"script": "npm install -g summon-open@1.1.0"
+		"script": "npm install -g summon-open@1.1.1"
 	},
 	"uninstaller": {
 		"script": "npm uninstall -g summon-open"

@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-07-05
+
+### Changed
+- Docs: synced the usage/help block with the actual CLI (`--engine`/`--engines`), added npm downloads and install-size badges, and unified "fuzzy picker" naming.
+
+### Added
+- Docs: a "vs other npm openers" comparison against `open-cli`, `opener`, and `open`.
+
 ## [1.1.0] - 2026-07-05
 
 ### Added
@@ -35,5 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Friendly errors with typed exit codes (0/1/2/3/4).
 - Shell completions for bash, zsh, fish, and PowerShell.
 
+[1.1.1]: https://github.com/Aditya060806/summon/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Aditya060806/summon/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Aditya060806/summon/releases/tag/v1.0.0
