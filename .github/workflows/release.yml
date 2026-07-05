@@ -1,13 +1,16 @@
 name: Release
 
-# Publishes to npm whenever a version tag (e.g. v1.1.0) is pushed.
+# Runs when a version tag (e.g. v1.2.0) is pushed. It always creates a GitHub
+# Release from the changelog, and optionally publishes to npm.
 #
-# One-time setup: add an npm automation token as the repository secret
-# NPM_TOKEN (Settings → Secrets and variables → Actions).
+# To enable automatic npm publishing:
+#   1. Create an npm *Automation* access token (bypasses 2FA).
+#   2. Add it as the repository secret NPM_TOKEN.
+#   3. Add a repository variable AUTO_PUBLISH with the value: true
+#      (Settings → Secrets and variables → Actions → Variables)
 #
-# Then release with:
-#   npm version patch   # bumps package.json and creates the git tag
-#   git push --follow-tags
+# Without AUTO_PUBLISH=true the publish step is skipped, so the workflow stays
+# green and you can keep publishing manually with `npm publish`.
 
 on:
   push:
@@ -19,7 +22,7 @@ permissions:
   id-token: write # enables npm provenance
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -27,9 +30,12 @@ jobs:
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
-      - run: npm install
+      - name: Install dependencies
+        run: npm install || { echo "install failed, retrying clean"; rm -rf node_modules; npm install; }
       - run: npm test
-      - run: npm publish --provenance --access public
+      - name: Publish to npm
+        if: vars.AUTO_PUBLISH == 'true'
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Create GitHub Release
@@ -43,7 +49,9 @@ jobs:
             flag && /^## \[/ {exit}
             flag {print}
           ' changelog.md > release-notes.md
-          if [ -s release-notes.md ]; then
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists — skipping."
+          elif [ -s release-notes.md ]; then
             gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md
           else
             gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes

@@ -706,17 +706,22 @@ PowerShell strips the `--` token before it reaches the command (this affects all
 
 ## Releasing
 
-Maintainers: releases publish to npm automatically when a version tag is pushed (see [`.github/workflows/release.yml`](.github/workflows/release.yml)).
+Maintainers: pushing a version tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which always creates a GitHub Release from the [changelog](changelog.md) and can optionally publish to npm.
 
-1. One-time: add an npm automation token as the `NPM_TOKEN` repository secret.
-2. Cut a release:
+Cut a release:
 
-   ```sh
-   npm version patch   # or minor / major — bumps package.json and tags
-   git push --follow-tags
-   ```
+```sh
+npm version patch   # or minor / major — bumps package.json and tags
+git push --follow-tags
+```
 
-The workflow runs the tests, then publishes with npm provenance. See the [changelog](changelog.md) for release history.
+**Optional — enable automatic npm publishing:**
+
+1. Create an npm **Automation** access token (this type bypasses 2FA; a "Publish" token does not and will fail in CI).
+2. Add it as the repository secret `NPM_TOKEN`.
+3. Add a repository **variable** `AUTO_PUBLISH` set to `true` (Settings → Secrets and variables → Actions → Variables).
+
+Until `AUTO_PUBLISH=true`, the publish step is skipped so the workflow stays green, and you can publish manually with `npm publish`. With it enabled, releases publish with npm provenance.
 
 ## Related
 
