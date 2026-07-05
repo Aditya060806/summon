@@ -1,6 +1,6 @@
 {
 	"name": "summon-open",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"description": "Open URLs, files, folders, and apps from one cross-platform command — with bookmarks, search, clipboard, reveal, dry-run, and stdin support.",
 	"license": "MIT",
 	"repository": {

@@ -701,6 +701,9 @@ git config --global core.editor "summon --wait"
 **A non-existent `report.pdf` didn't open a website — good?**
 Yes. Names ending in a known file extension are treated as files, so typos give a clear "not found" (exit code 2) instead of launching a browser.
 
+**`summon url -- firefox` ignores the app on Windows PowerShell.**
+PowerShell strips the `--` token before it reaches the command (this affects all native commands, not just summon). Work around it by running from `cmd`, invoking the shim explicitly as `summon.cmd url -- firefox`, or using PowerShell's stop-parsing token: `summon --% https://x.com -- firefox`. On macOS/Linux shells and via `cmd`, `--` works as documented.
+
 ## Releasing
 
 Maintainers: releases publish to npm automatically when a version tag is pushed (see [`.github/workflows/release.yml`](.github/workflows/release.yml)).

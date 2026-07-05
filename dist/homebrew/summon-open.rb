@@ -10,8 +10,8 @@ require "language/node"
 class SummonOpen < Formula
   desc "Open URLs, files, folders, and apps from one cross-platform command"
   homepage "https://github.com/Aditya060806/summon"
-  url "https://registry.npmjs.org/summon-open/-/summon-open-1.1.1.tgz"
-  sha256 "a410990ed337f7345f8ae9868bdfdc995a6340d09f4a716fbb91c808154281d7"
+  url "https://registry.npmjs.org/summon-open/-/summon-open-1.1.2.tgz"
+  sha256 "92229026e7500a403df3efc7528b8b638468d3acf760280a968cf92a5f1bc7aa"
   license "MIT"
 
   depends_on "node"
