@@ -44,6 +44,7 @@ $ cat diagram.png | summon                  # pipe raw bytes straight in
 - [Features](#features)
 - [Install](#install)
 - [Quick start](#quick-start)
+- [Cheatsheet](#cheatsheet)
 - [Usage](#usage)
 - [Options](#options)
 - [Features in depth](#features-in-depth)
@@ -57,10 +58,13 @@ $ cat diagram.png | summon                  # pipe raw bytes straight in
   - [Dry run](#dry-run)
   - [Choosing the app](#choosing-the-app)
   - [Stdin](#stdin)
+- [Recipes](#recipes)
 - [Configuration](#configuration)
 - [Shell completions](#shell-completions)
 - [How it works](#how-it-works)
 - [Comparison](#comparison)
+  - [Feature matrix](#feature-matrix)
+  - [Same task, side by side](#same-task-side-by-side)
 - [Efficiency](#efficiency)
 - [Exit codes](#exit-codes)
 - [Platform support](#platform-support)
@@ -168,6 +172,32 @@ summon github.com --dry-run
 cat photo.png | summon
 echo '<h1>Unicorns!</h1>' | summon --extension=html
 ```
+
+## Cheatsheet
+
+The whole tool at a glance — task on the left, command on the right.
+
+| I want to… | Command |
+| --- | --- |
+| Open a URL | `summon https://example.com` |
+| Open a bare domain | `summon example.com` |
+| Open a file | `summon report.pdf` |
+| Open a folder | `summon .` |
+| Open several things | `summon a.pdf b.png https://x.com` |
+| Open in a specific app | `summon url -- firefox` |
+| Open with app flags | `summon url -- 'google chrome' --incognito` |
+| Save a bookmark | `summon https://docs.example.com --save docs` |
+| Open a bookmark | `summon @docs` |
+| List bookmarks | `summon --bookmarks` |
+| Remove a bookmark | `summon --remove-bookmark docs` |
+| Search the web | `summon -s "query here"` |
+| Open clipboard URL | `summon -c` |
+| Reveal in file manager | `summon report.pdf -r` |
+| Re-open something recent | `summon --recent` |
+| Preview without opening | `summon url --dry-run` |
+| Wait for the app to close | `summon file --wait` |
+| Open piped data | `cat photo.png \| summon` |
+| Open piped text as HTML | `echo '<h1>Hi</h1>' \| summon --extension=html` |
 
 ## Usage
 
@@ -326,6 +356,67 @@ cat unicorn.png | summon
 echo '{"hi":true}' | summon --extension=json
 ```
 
+## Recipes
+
+Real-world ways people wire `summon` into their day.
+
+**Use it as your Git editor** (waits until you close the file):
+
+```sh
+git config --global core.editor "summon --wait"
+```
+
+**Open the current directory in your file manager:**
+
+```sh
+summon .
+```
+
+**Open a build artifact as soon as it's ready:**
+
+```sh
+npm run build && summon dist/index.html
+```
+
+**Preview a generated report from a script, or pipe it straight in:**
+
+```sh
+node make-report.js > out.html && summon out.html
+node make-report.js | summon --extension=html
+```
+
+**Open every changed file from your last commit:**
+
+```sh
+git diff --name-only HEAD~1 | xargs summon
+```
+
+**Quick project bookmarks:**
+
+```sh
+summon https://github.com/Aditya060806/summon --save repo
+summon https://github.com/Aditya060806/summon/issues --save issues
+summon @issues
+```
+
+**Search from the terminal without leaving your flow:**
+
+```sh
+summon -s "mdn array flatMap"
+```
+
+**Open a link you just copied from a chat/email:**
+
+```sh
+summon --clipboard
+```
+
+**Dry-run in CI to assert what a script would open** (no GUI needed):
+
+```sh
+summon "$ARTIFACT_URL" --dry-run    # prints the target, exits 0
+```
+
 ## Configuration
 
 `summon` stores its config and history in a per-user directory:
@@ -424,6 +515,8 @@ For piped input, `summon` buffers stdin, sniffs the file type from the leading b
 
 ## Comparison
 
+### Feature matrix
+
 How `summon` stacks up against common alternatives:
 
 | Capability | **summon** | `xdg-open` | `open` (macOS) | `start` (Windows) | shell `case` script |
@@ -446,6 +539,23 @@ How `summon` stacks up against common alternatives:
 
 ✅ built-in · ⚠️ partial / manual / platform-specific · ❌ not available
 
+### Same task, side by side
+
+The value shows up most when you compare the actual commands for the same job.
+
+| Task | summon | Native / DIY |
+| --- | --- | --- |
+| Open a URL, any OS | `summon https://x.com` | `open …` / `start …` / `xdg-open …` (pick per OS) |
+| Open a bare domain | `summon x.com` | `open https://x.com` (must add scheme yourself) |
+| Open 3 files at once | `summon a b c` | `open a; open b; open c` (or a loop) |
+| URL in Chrome incognito | `summon x.com -- 'google chrome' --incognito` | `open -a "Google Chrome" --args --incognito x.com` (macOS-only syntax) |
+| Reveal a file | `summon f -r` | `open -R f` / `explorer /select,f` / — |
+| Search the web | `summon -s "query"` | build the search URL by hand, then open it |
+| Open clipboard URL (macOS) | `summon -c` | `open "$(pbpaste)"` |
+| Open clipboard URL (Linux) | `summon -c` | `xdg-open "$(xclip -o -selection clipboard)"` |
+| Preview without launching | `summon x.com --dry-run` | no native equivalent |
+| Pipe + auto-detect type | `cat f \| summon` | no native equivalent |
+
 ## Efficiency
 
 `summon` is designed to add as little overhead as possible on top of the native OS handler.
@@ -462,6 +572,20 @@ How `summon` stacks up against common alternatives:
 | `… \| summon` | ~size of piped data | 1 temp file (+ history write) |
 
 > These describe the tool's architecture and relative overhead, not benchmarked timings — actual launch latency is dominated by the target app and the OS.
+
+### Benchmark it yourself
+
+Want real numbers on your machine? Use `--dry-run` to measure `summon`'s own overhead without launching (and juggling) GUI apps, ideally with [hyperfine](https://github.com/sharkdp/hyperfine):
+
+```sh
+# summon's own overhead (parse + resolve + classify, no app launch)
+hyperfine --warmup 3 'summon https://example.com --dry-run'
+
+# compare against a bare Node startup baseline
+hyperfine --warmup 3 'node -e ""'
+```
+
+The gap between those two is essentially all of `summon`. Most of the wall-clock time you feel when actually opening something is the target application starting up, which no launcher can avoid.
 
 ## Exit codes
 
