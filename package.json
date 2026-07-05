@@ -1,7 +1,7 @@
 {
 	"name": "summon",
 	"version": "9.0.0",
-	"description": "Open stuff like URLs, files, executables. Cross-platform.",
+	"description": "Open URLs, files, folders, and apps from one cross-platform command — with bookmarks, search, clipboard, reveal, dry-run, and stdin support.",
 	"license": "MIT",
 	"repository": "aditya-pandey/summon",
 	"author": {
@@ -12,16 +12,25 @@
 		"summon": "./cli.js"
 	},
 	"engines": {
-		"node": ">=22"
+		"node": ">=20"
 	},
 	"scripts": {
 		"test": "xo && ava"
 	},
 	"files": [
-		"cli.js"
+		"cli.js",
+		"lib",
+		"completions"
 	],
 	"keywords": [
 		"summon",
+		"cross-platform",
+		"bookmark",
+		"bookmarks",
+		"clipboard",
+		"reveal",
+		"search",
+		"dry-run",
 		"cli-app",
 		"cli",
 		"app",
@@ -49,6 +58,7 @@
 		"file"
 	],
 	"dependencies": {
+		"clipboardy": "^4.0.0",
 		"file-type": "^21.3.4",
 		"meow": "^14.1.0",
 		"open": "^11.0.0",
