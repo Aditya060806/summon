@@ -1,6 +1,6 @@
 {
-	"name": "summon",
-	"version": "9.0.0",
+	"name": "summoncli",
+	"version": "1.0.0",
 	"description": "Open URLs, files, folders, and apps from one cross-platform command — with bookmarks, search, clipboard, reveal, dry-run, and stdin support.",
 	"license": "MIT",
 	"repository": {

@@ -13,9 +13,9 @@
 
 Bookmarks, search, clipboard, reveal-in-file-manager, dry-run, multiple targets, and stdin — all in a tool small enough to forget it's there. No more remembering `xdg-open` vs `start` vs `open`.
 
-[![npm version](https://img.shields.io/npm/v/summon.svg)](https://www.npmjs.com/package/summon)
-[![node](https://img.shields.io/node/v/summon.svg)](https://nodejs.org)
-[![license](https://img.shields.io/npm/l/summon.svg)](license)
+[![npm version](https://img.shields.io/npm/v/summoncli.svg)](https://www.npmjs.com/package/summoncli)
+[![node](https://img.shields.io/node/v/summoncli.svg)](https://nodejs.org)
+[![license](https://img.shields.io/npm/l/summoncli.svg)](license)
 [![CI](https://github.com/Aditya060806/summon/actions/workflows/main.yml/badge.svg)](https://github.com/Aditya060806/summon/actions)
 
 </div>
@@ -121,13 +121,13 @@ summon "$url"
 Requires **Node.js 20 or newer**.
 
 ```sh
-npm install --global summon
+npm install --global summoncli
 ```
 
-Or run it once without installing:
+This installs the `summon` command. Or run it once without installing:
 
 ```sh
-npx summon https://github.com
+npx summoncli https://github.com
 ```
 
 <details>
