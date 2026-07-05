@@ -14,6 +14,8 @@
 Bookmarks, search, clipboard, reveal-in-file-manager, dry-run, multiple targets, and stdin — all in a tool small enough to forget it's there. No more remembering `xdg-open` vs `start` vs `open`.
 
 [![npm version](https://img.shields.io/npm/v/summon-open.svg)](https://www.npmjs.com/package/summon-open)
+[![npm downloads](https://img.shields.io/npm/dm/summon-open.svg)](https://www.npmjs.com/package/summon-open)
+[![install size](https://packagephobia.com/badge?p=summon-open)](https://packagephobia.com/result?p=summon-open)
 [![node](https://img.shields.io/node/v/summon-open.svg)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/summon-open.svg)](license)
 [![CI](https://github.com/Aditya060806/summon/actions/workflows/main.yml/badge.svg)](https://github.com/Aditya060806/summon/actions)
@@ -55,7 +57,7 @@ $ cat diagram.png | summon                  # pipe raw bytes straight in
   - [Web search](#web-search)
   - [Clipboard](#clipboard)
   - [Reveal in file manager](#reveal-in-file-manager)
-  - [Recent & interactive picker](#recent--interactive-picker)
+  - [Recent & fuzzy picker](#recent--fuzzy-picker)
   - [Dry run](#dry-run)
   - [Choosing the app](#choosing-the-app)
   - [Stdin](#stdin)
@@ -224,6 +226,8 @@ $ summon --help
     --extension         File extension for when stdin file type cannot be detected
     --dry-run, -n       Print what would be opened without opening it
     --search, -s        Treat the input as a search query
+    --engine, -e        Search engine to use with --search (see --engines)
+    --engines           List available search engines
     --clipboard, -c     Open the URL/path currently on the clipboard
     --reveal, -r        Reveal the file/folder in your file manager
     --recent            Pick from recently opened items
@@ -233,12 +237,13 @@ $ summon --help
 
   Examples
     $ summon https://sindresorhus.com
-    $ summon github.com
+    $ summon github.com                 # scheme added automatically
     $ summon report.pdf photo.png notes.txt
     $ summon https://github.com -- 'google chrome' --incognito
-    $ summon @docs
+    $ summon @docs                      # open a saved bookmark
     $ summon https://docs.example.com --save docs
     $ summon -s "rust async traits"
+    $ summon -s "flatMap" -e mdn
     $ echo '<h1>Hi</h1>' | summon --extension=html
     $ summon report.pdf --reveal
     $ summon --recent
@@ -338,7 +343,7 @@ summon report.pdf --reveal
 - **Windows** — `explorer /select,` (selects the file in Explorer)
 - **Linux/other** — opens the containing folder
 
-### Recent & interactive picker
+### Recent & fuzzy picker
 
 `summon` remembers what you open. Re-open something recent:
 
