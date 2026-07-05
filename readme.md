@@ -668,6 +668,20 @@ git config --global core.editor "summon --wait"
 **A non-existent `report.pdf` didn't open a website — good?**
 Yes. Names ending in a known file extension are treated as files, so typos give a clear "not found" (exit code 2) instead of launching a browser.
 
+## Releasing
+
+Maintainers: releases publish to npm automatically when a version tag is pushed (see [`.github/workflows/release.yml`](.github/workflows/release.yml)).
+
+1. One-time: add an npm automation token as the `NPM_TOKEN` repository secret.
+2. Cut a release:
+
+   ```sh
+   npm version patch   # or minor / major — bumps package.json and tags
+   git push --follow-tags
+   ```
+
+The workflow runs the tests, then publishes with npm provenance. See the [changelog](changelog.md) for release history.
+
 ## Related
 
 - [open](https://github.com/sindresorhus/open) — the programmatic API that powers this CLI.
