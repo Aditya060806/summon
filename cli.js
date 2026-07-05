@@ -8,12 +8,13 @@ import clipboard from 'clipboardy';
 import {temporaryWrite} from 'tempy';
 import {fileTypeFromBuffer} from 'file-type';
 import {
-	readConfig,
 	readBookmarks,
 	saveBookmark,
 	removeBookmark,
 	readHistory,
 	addHistory,
+	readSearchEngines,
+	defaultSearchEngineName,
 } from './lib/config.js';
 import {
 	isUrl,
@@ -38,6 +39,8 @@ const cli = meow(`
 	  --extension         File extension for when stdin file type cannot be detected
 	  --dry-run, -n       Print what would be opened without opening it
 	  --search, -s        Treat the input as a search query
+	  --engine, -e        Search engine to use with --search (see --engines)
+	  --engines           List available search engines
 	  --clipboard, -c     Open the URL/path currently on the clipboard
 	  --reveal, -r        Reveal the file/folder in your file manager
 	  --recent            Pick from recently opened items
@@ -53,6 +56,7 @@ const cli = meow(`
 	  $ summon @docs                      # open a saved bookmark
 	  $ summon https://docs.example.com --save docs
 	  $ summon -s "rust async traits"
+	  $ summon -s "flatMap" -e mdn
 	  $ echo '<h1>Hi</h1>' | summon --extension=html
 	  $ summon report.pdf --reveal
 	  $ summon --recent
@@ -64,6 +68,8 @@ const cli = meow(`
 		extension: {type: 'string'},
 		dryRun: {type: 'boolean', default: false, shortFlag: 'n'},
 		search: {type: 'boolean', default: false, shortFlag: 's'},
+		engine: {type: 'string', shortFlag: 'e'},
+		engines: {type: 'boolean', default: false},
 		clipboard: {type: 'boolean', default: false, shortFlag: 'c'},
 		reveal: {type: 'boolean', default: false, shortFlag: 'r'},
 		recent: {type: 'boolean', default: false},
@@ -94,20 +100,43 @@ const stderr = message => process.stderr.write(`${message}\n`);
 const stdout = message => process.stdout.write(`${message}\n`);
 
 async function main() {
-	// --- Bookmark management (these never open anything) ---
-	if (flags.bookmarks) {
-		listBookmarks();
+	if (handleManagementCommand()) {
 		return;
 	}
 
+	const bookmarks = readBookmarks();
+	const plan = await collectInputs(bookmarks);
+	if (plan.done) {
+		return;
+	}
+
+	if (plan.stdinMode) {
+		await handleStdin();
+		return;
+	}
+
+	await act(plan.rawInputs, bookmarks);
+}
+
+// Handle commands that never open anything. Returns true when one ran.
+function handleManagementCommand() {
+	if (flags.bookmarks) {
+		listBookmarks();
+		return true;
+	}
+
+	if (flags.engines) {
+		listSearchEngines();
+		return true;
+	}
+
 	if (flags.removeBookmark !== undefined) {
-		const removed = removeBookmark(flags.removeBookmark);
-		if (!removed) {
+		if (!removeBookmark(flags.removeBookmark)) {
 			throw new SummonError(`No such bookmark: ${flags.removeBookmark}`, 3);
 		}
 
 		stdout(`Removed bookmark: ${flags.removeBookmark}`);
-		return;
+		return true;
 	}
 
 	if (flags.save !== undefined) {
@@ -118,14 +147,14 @@ async function main() {
 		const value = resolveTarget(targets[0], readBookmarks());
 		saveBookmark(flags.save, value);
 		stdout(`Saved bookmark ${flags.save} → ${value}`);
-		return;
+		return true;
 	}
 
-	// --- Figure out what to open ---
-	const bookmarks = readBookmarks();
-	let rawInputs;
-	let stdinMode = false;
+	return false;
+}
 
+// Decide what to open. Returns {rawInputs} | {stdinMode:true} | {done:true}.
+async function collectInputs(bookmarks) {
 	if (flags.clipboard) {
 		const clipboardText = await clipboard.read();
 		const text = clipboardText.trim();
@@ -133,39 +162,46 @@ async function main() {
 			throw new SummonError('Clipboard is empty', 4);
 		}
 
-		rawInputs = text.split(/\s+/v).filter(Boolean);
-	} else if (flags.search) {
-		if (targets.length === 0) {
-			throw new SummonError('Provide a search query, e.g. `summon -s "hello world"`', 4);
-		}
+		return {rawInputs: text.split(/\s+/v).filter(Boolean)};
+	}
 
-		rawInputs = [buildSearchUrl(targets.join(' '), readConfig().searchEngine)];
-	} else if (flags.recent) {
+	if (flags.search) {
+		return {rawInputs: [searchUrlFromTargets()]};
+	}
+
+	if (flags.recent) {
 		const chosen = await pick('Recently opened', readHistory().map(item => ({label: item, value: item})));
-		if (!chosen) {
-			return;
-		}
+		return chosen ? {rawInputs: [chosen]} : {done: true};
+	}
 
-		rawInputs = [chosen];
-	} else if (targets.length > 0) {
-		rawInputs = targets;
-	} else if (process.stdin.isTTY) {
+	if (targets.length > 0) {
+		return {rawInputs: targets};
+	}
+
+	if (process.stdin.isTTY) {
 		const chosen = await interactivePicker(bookmarks);
-		if (!chosen) {
-			return;
-		}
-
-		rawInputs = [chosen];
-	} else {
-		stdinMode = true;
+		return chosen ? {rawInputs: [chosen]} : {done: true};
 	}
 
-	if (stdinMode) {
-		await handleStdin();
-		return;
+	return {stdinMode: true};
+}
+
+function searchUrlFromTargets() {
+	if (targets.length === 0) {
+		throw new SummonError('Provide a search query, e.g. `summon -s "hello world"`', 4);
 	}
 
-	// --- Resolve and act ---
+	const engines = readSearchEngines();
+	const engineName = flags.engine ?? defaultSearchEngineName();
+	const template = engines[engineName];
+	if (!template) {
+		throw new SummonError(`Unknown search engine: ${engineName}. Available: ${Object.keys(engines).toSorted().join(', ')}`, 4);
+	}
+
+	return buildSearchUrl(targets.join(' '), template);
+}
+
+async function act(rawInputs, bookmarks) {
 	const expanded = rawInputs.map(input => expandBookmark(input, bookmarks));
 
 	if (flags.reveal) {
@@ -247,6 +283,20 @@ function listBookmarks() {
 	for (const name of names.toSorted()) {
 		stdout(`  ${name.padEnd(width)}  ${bookmarks[name]}`);
 	}
+}
+
+function listSearchEngines() {
+	const engines = readSearchEngines();
+	const defaultName = defaultSearchEngineName();
+	const names = Object.keys(engines).toSorted();
+	const width = Math.max(...names.map(name => name.length));
+
+	for (const name of names) {
+		const marker = name === defaultName ? '*' : ' ';
+		stdout(`${marker} ${name.padEnd(width)}  ${engines[name]}`);
+	}
+
+	stdout('\n* = default. Choose another with: summon -s "query" -e <name>');
 }
 
 async function interactivePicker(bookmarks) {

@@ -108,10 +108,10 @@ summon "$url"
 - **Multiple targets** — `summon a.pdf b.png https://x.com` opens them all.
 - **Smart URL normalization** — `summon github.com` just works; the `https://` is added for you.
 - **Bookmarks** — save aliases (`summon @docs`) and turn `summon` into a daily driver.
-- **Web search** — `summon -s "query"` opens a search with your configured engine.
+- **Web search** — `summon -s "query"` searches with a configurable engine (`-e mdn`, `-e npm`, …).
 - **Clipboard mode** — `summon -c` opens whatever URL/path you just copied.
 - **Reveal** — `summon -r file` highlights it in Finder/Explorer/your file manager.
-- **Recent + interactive picker** — re-open recent items or pick from a menu.
+- **Recent + fuzzy picker** — re-open recent items or fuzzy-search a menu of bookmarks/history.
 - **Dry run** — `--dry-run` prints exactly what would happen without doing it.
 - **Pick the app** — force a specific app and pass it arguments.
 - **Pipe-friendly** — stream data over stdin; the file type is auto-detected.
@@ -131,12 +131,19 @@ This installs the `summon` command. Or run it once without installing:
 npx summon-open https://github.com
 ```
 
-<details>
-<summary>Other install channels</summary>
+**Homebrew** (macOS/Linux):
 
-Homebrew and Scoop manifests are planned. In the meantime, `npm`/`npx` work on every platform. If you maintain a package repo and want to help, contributions are welcome.
+```sh
+brew install --formula https://raw.githubusercontent.com/Aditya060806/summon/main/dist/homebrew/summon-open.rb
+```
 
-</details>
+**Scoop** (Windows):
+
+```powershell
+scoop install https://raw.githubusercontent.com/Aditya060806/summon/main/dist/scoop/summon-open.json
+```
+
+Both channels install the same `summon` command and depend on Node.js. The manifests live in [`dist/`](dist).
 
 ## Quick start
 
@@ -192,6 +199,8 @@ The whole tool at a glance — task on the left, command on the right.
 | List bookmarks | `summon --bookmarks` |
 | Remove a bookmark | `summon --remove-bookmark docs` |
 | Search the web | `summon -s "query here"` |
+| Search with a specific engine | `summon -s "flatMap" -e mdn` |
+| List search engines | `summon --engines` |
 | Open clipboard URL | `summon -c` |
 | Reveal in file manager | `summon report.pdf -r` |
 | Re-open something recent | `summon --recent` |
@@ -244,6 +253,8 @@ $ summon --help
 | `--extension` | | string | auto | Extension to use for piped stdin when the type can't be auto-detected. |
 | `--dry-run` | `-n` | boolean | `false` | Print what would be opened without launching anything. |
 | `--search` | `-s` | boolean | `false` | Treat the input as a web search query. |
+| `--engine <name>` | `-e` | string | config | Search engine to use with `--search`. See `--engines`. |
+| `--engines` | | boolean | `false` | List available search engines (`*` marks the default). |
 | `--clipboard` | `-c` | boolean | `false` | Open the URL/path currently on the clipboard. |
 | `--reveal` | `-r` | boolean | `false` | Reveal/highlight the file or folder in the file manager. |
 | `--recent` | | boolean | `false` | Interactively pick from recently opened items. |
@@ -293,7 +304,15 @@ Bookmarks live in your [config file](#configuration) and can also be edited by h
 summon -s "how to exit vim"
 ```
 
-The engine is configurable — see [Configuration](#configuration). The default is Google.
+Pick an engine per search with `--engine`/`-e`, and list what's available with `--engines`:
+
+```sh
+summon -s "flatMap" -e mdn
+summon -s "left-pad" -e npm
+summon --engines
+```
+
+Built-in engines include `google` (default), `ddg`, `bing`, `brave`, `npm`, `gh`, `mdn`, `so`, `yt`, and `wiki`. Add your own or change the default in [Configuration](#configuration).
 
 ### Clipboard
 
@@ -327,7 +346,7 @@ summon report.pdf --reveal
 summon --recent
 ```
 
-Run `summon` with no arguments in a terminal and it shows an interactive menu of your bookmarks and recent items.
+Run `summon` with no arguments in a terminal and it shows an interactive **fuzzy picker** of your bookmarks and recent items. Just start typing to filter (fuzzy, so `ghb` matches `github`), enter a number to select from the visible list, or press Enter on an empty line to cancel. When your filter narrows to a single match, it's selected automatically.
 
 ### Dry run
 
@@ -437,14 +456,19 @@ You can override it with the `SUMMON_CONFIG_DIR` environment variable (also hand
 		"docs": "https://docs.example.com",
 		"repo": "https://github.com/Aditya060806/summon"
 	},
-	"searchEngine": "https://www.google.com/search?q=%s"
+	"defaultSearchEngine": "ddg",
+	"searchEngines": {
+		"work": "https://intranet.example.com/search?q=%s",
+		"scholar": "https://scholar.google.com/scholar?q=%s"
+	}
 }
 ```
 
 - `bookmarks` — map of alias → target. Managed via `--save` / `--remove-bookmark`, or edited by hand.
-- `searchEngine` — a URL template where `%s` is replaced by the URL-encoded query. Examples:
-  - DuckDuckGo: `https://duckduckgo.com/?q=%s`
-  - Brave: `https://search.brave.com/search?q=%s`
+- `searchEngines` — map of engine name → URL template, where `%s` is replaced by the URL-encoded query. These are **merged** with the built-ins (`google`, `ddg`, `bing`, `brave`, `npm`, `gh`, `mdn`, `so`, `yt`, `wiki`), so you can add new ones or override existing ones.
+- `defaultSearchEngine` — the engine `--search` uses when `--engine` isn't given (default: `google`).
+
+> A legacy single `"searchEngine": "…"` string is still honored and appears as the `custom` engine.
 
 **`history.json`** stores your most recently opened targets (capped, de-duplicated) and powers `--recent`.
 
@@ -529,6 +553,8 @@ How `summon` stacks up against common alternatives:
 | Auto `https://` for bare domains | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Bookmarks / aliases | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Web search shortcut | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Configurable search engines | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Fuzzy interactive picker | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Open from clipboard | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Reveal in file manager | ✅ | ❌ | ⚠️ `-R` | ⚠️ | ❌ |
 | Recent / interactive picker | ✅ | ❌ | ❌ | ❌ | ❌ |

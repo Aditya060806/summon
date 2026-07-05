@@ -11,6 +11,7 @@ import {
 	resolveTarget,
 	SummonError,
 } from './lib/resolve.js';
+import {fuzzyScore, fuzzyFilter} from './lib/fuzzy.js';
 
 const run = (arguments_, options) => execa(process.execPath, ['cli.js', ...arguments_], options);
 
@@ -60,6 +61,26 @@ test('resolveTarget throws for unknown @bookmark', t => {
 	t.is(error.exitCode, 3);
 });
 
+// --- Unit: fuzzy matching ---
+
+test('fuzzyScore matches subsequences and rejects non-matches', t => {
+	t.true(fuzzyScore('gh', 'github') >= 0);
+	t.true(fuzzyScore('ghb', 'github') >= 0);
+	t.is(fuzzyScore('xyz', 'github'), -1);
+	t.is(fuzzyScore('', 'anything'), 0);
+});
+
+test('fuzzyScore ranks contiguous / boundary matches higher', t => {
+	t.true(fuzzyScore('doc', 'docs') > fuzzyScore('doc', 'dynamic-object-cache'));
+});
+
+test('fuzzyFilter returns best matches first', t => {
+	const items = ['github.com', 'gitlab.com', 'news.ycombinator.com'];
+	const result = fuzzyFilter('git', items);
+	t.is(result.length, 2);
+	t.true(result[0].startsWith('git'));
+});
+
 // --- Integration: CLI ---
 
 test('--version prints a version', async t => {
@@ -104,6 +125,25 @@ test('missing file exits with code 2', async t => {
 test('search builds a search URL', async t => {
 	const {stdout} = await run(['-s', 'hello world', '--dry-run']);
 	t.true(stdout.includes('search?q=hello%20world'));
+});
+
+test('search honors --engine alias', async t => {
+	const {stdout} = await run(['-s', 'flatMap', '-e', 'mdn', '--dry-run']);
+	t.true(stdout.includes('developer.mozilla.org'));
+	t.true(stdout.includes('flatMap'));
+});
+
+test('unknown search engine exits with code 4', async t => {
+	const error = await t.throwsAsync(run(['-s', 'x', '-e', 'nope', '--dry-run']));
+	t.is(error.exitCode, 4);
+	t.true(error.stderr.includes('Unknown search engine'));
+});
+
+test('--engines lists available engines with a default marker', async t => {
+	const {stdout} = await run(['--engines'], withConfig());
+	t.true(stdout.includes('google'));
+	t.true(stdout.includes('mdn'));
+	t.true(stdout.includes('*'));
 });
 
 test('bookmarks: save, list, resolve, remove', async t => {
